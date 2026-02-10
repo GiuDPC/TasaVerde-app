@@ -1,9 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as AuthSession from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
-
-WebBrowser.maybeCompleteAuthSession();
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -31,6 +27,12 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signInWithGoogle() {
+  // Imports lazy para evitar crash al cargar el modulo
+  const AuthSession = require("expo-auth-session");
+  const WebBrowser = require("expo-web-browser");
+
+  WebBrowser.maybeCompleteAuthSession();
+
   const redirectUrl = AuthSession.makeRedirectUri({ scheme: "tasaverde" });
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -48,11 +50,19 @@ export async function signInWithGoogle() {
 
   if (result.type === "success") {
     const url = result.url;
-    const params = new URL(url);
-    const fragment = params.hash?.substring(1);
-    const searchParams = new URLSearchParams(fragment);
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
+    // Parsear tokens del fragment manualmente (React Native no tiene URL API)
+    const hashIndex = url.indexOf("#");
+    if (hashIndex === -1) return;
+
+    const fragment = url.substring(hashIndex + 1);
+    const params: Record<string, string> = {};
+    fragment.split("&").forEach((pair: string) => {
+      const [key, value] = pair.split("=");
+      params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+    });
+
+    const accessToken = params["access_token"];
+    const refreshToken = params["refresh_token"];
 
     if (accessToken && refreshToken) {
       const { error: sessionError } = await supabase.auth.setSession({
