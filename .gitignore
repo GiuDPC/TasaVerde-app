@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# agent tooling (gentle-ai / local skill caches)
+.atl/
+.agente

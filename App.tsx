@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
-import { StatusBar, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useMemo } from 'react';
+import { StatusBar } from 'react-native';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DashboardScreen } from './src/screens/DashboardScreen';
 import { CalculatorScreen } from './src/screens/CalculatorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
-import { AlertsScreen } from './src/screens/AlertsScreen';
-import { SplashScreen } from './src/components/SplashScreen';
-import { Icon, IconName } from './src/components/Icon';
-import { useAuth } from './src/hooks/useAuth';
-import AuthScreen from './src/screens/AuthScreen';
+import { FloatingTabBar } from './src/components/FloatingTabBar';
+import { SettingsSheet } from './src/components/SettingsSheet';
+import { OfflineManager } from './src/components/OfflineManager';
+import { ToastHost } from './src/components/Toast';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { getCachedRates } from './src/services/ratesStore';
+import { ActiveRateProvider } from './src/state/ActiveRateContext';
+import { ThemeProvider, useTheme } from './src/state/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,135 +30,84 @@ const queryClient = new QueryClient({
   },
 });
 
-function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
-  return (
-    <View style={styles.iconContainer}>
-      <Icon 
-        name={name} 
-        size={focused ? 26 : 22} 
-        color={focused ? '#10B981' : '#94A3B8'} 
-      />
-    </View>
-  );
-}
-
 function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#0F172A',
-          borderTopColor: '#334155',
-          borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: '#10B981',
-        tabBarInactiveTintColor: '#94A3B8',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          marginTop: 2,
-        },
-        lazy: true,
-        tabBarHideOnKeyboard: true,
-      }}
+      screenOptions={{ headerShown: false, lazy: true }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
     >
-      <Tab.Screen
-        name="Tasas"
-        component={DashboardScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="graphic" focused={focused} />,
-          tabBarLabel: 'Tasas',
-        }}
-      />
-      <Tab.Screen
-        name="Calculadora"
-        component={CalculatorScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="calculator" focused={focused} />,
-          tabBarLabel: 'Calculadora',
-        }}
-      />
-      <Tab.Screen
-        name="Historial"
-        component={HistoryScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="historialMenu" focused={focused} />,
-          tabBarLabel: 'Historial',
-        }}
-      />
-      <Tab.Screen
-        name="Alertas"
-        component={AlertsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="notificacionesMenu" focused={focused} />,
-          tabBarLabel: 'Alertas',
-        }}
-      />
+      <Tab.Screen name="Tasas" component={DashboardScreen} />
+      <Tab.Screen name="Calculadora" component={CalculatorScreen} />
+      <Tab.Screen name="Historial" component={HistoryScreen} />
     </Tab.Navigator>
   );
 }
 
-export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
-  const { loading, isLoggedIn, error } = useAuth();
+function AppContent() {
+  const { palette, scheme } = useTheme();
+  const queryClient = useQueryClient();
 
-  if (showSplash) {
-    return (
-      <>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-        <SplashScreen onFinish={() => setShowSplash(false)} />
-      </>
-    );
-  }
+  // Hidrata la caché de tasas ANTES del primer render del dashboard: muestra
+  // la última tasa guardada al instante (offline o con server lento) y luego
+  // refresca en segundo plano.
+  useEffect(() => {
+    let active = true;
+    getCachedRates().then((c) => {
+      if (!active || !c) return;
+      queryClient.setQueryData(['rates'], {
+        ...c.rates,
+        source: 'cache',
+        fetchedAt: c.fetchedAt,
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [queryClient]);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-      </View>
-    );
-  }
-
-  // Mostrar error si hay problemas de inicialización
-  if (error) {
-    console.error("🔴 App Error:", error);
-    // Continuar a AuthScreen incluso con error
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-        <AuthScreen />
-      </>
-    );
-  }
+  const navTheme = useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: palette.bg,
+        card: palette.card,
+        text: palette.text,
+        border: palette.border,
+        primary: palette.accent,
+      },
+    };
+  }, [scheme, palette]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <>
+      <StatusBar
+        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={palette.bg}
+      />
+      <NavigationContainer theme={navTheme}>
+        <TabNavigator />
+      </NavigationContainer>
+      <SettingsSheet />
+      <OfflineManager />
+      <ToastHost />
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <SafeAreaProvider>
+            <ActiveRateProvider>
+              <AppContent />
+            </ActiveRateProvider>
+          </SafeAreaProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}

@@ -1,5 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { Palette } from '../theme';
+import { useThemeColors } from '../state/ThemeContext';
 
 /**
  * Componente SkeletonLoader - Muestra un placeholder animado mientras carga el contenido
@@ -15,6 +17,8 @@ interface SkeletonProps {
 
 // Skeleton individual con animación de pulso
 export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style }: SkeletonProps) {
+  const c = useThemeColors();
+  const s = useMemo(() => createStyles(c), [c]);
   const pulseAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -41,7 +45,7 @@ export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style 
   return (
     <Animated.View
       style={[
-        styles.skeleton,
+        s.skeleton,
         {
           width,
           height,
@@ -56,16 +60,18 @@ export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style 
 
 // Skeleton para tarjeta de tasa principal (BCV Dólar)
 export function MainCardSkeleton() {
+  const c = useThemeColors();
+  const s = useMemo(() => createStyles(c), [c]);
   return (
-    <View style={styles.mainCard}>
-      <View style={styles.cardHeader}>
+    <View style={s.mainCard}>
+      <View style={s.cardHeader}>
         <Skeleton width={44} height={44} borderRadius={12} />
-        <View style={styles.cardTitleContainer}>
+        <View style={s.cardTitleContainer}>
           <Skeleton width={100} height={18} style={{ marginBottom: 6 }} />
           <Skeleton width={160} height={12} />
         </View>
       </View>
-      <View style={styles.rateRow}>
+      <View style={s.rateRow}>
         <Skeleton width={150} height={52} borderRadius={8} />
         <Skeleton width={50} height={20} style={{ marginLeft: 12 }} />
       </View>
@@ -75,8 +81,10 @@ export function MainCardSkeleton() {
 
 // Skeleton para tarjetas secundarias (Euro, Binance)
 export function SecondaryCardSkeleton() {
+  const c = useThemeColors();
+  const s = useMemo(() => createStyles(c), [c]);
   return (
-    <View style={styles.secondaryCard}>
+    <View style={s.secondaryCard}>
       <Skeleton width={40} height={40} borderRadius={10} style={{ marginBottom: 10 }} />
       <Skeleton width={70} height={12} style={{ marginBottom: 8 }} />
       <Skeleton width={80} height={26} borderRadius={6} />
@@ -87,8 +95,10 @@ export function SecondaryCardSkeleton() {
 
 // Skeleton para el banner de mejor opción
 export function BannerSkeleton() {
+  const c = useThemeColors();
+  const s = useMemo(() => createStyles(c), [c]);
   return (
-    <View style={styles.banner}>
+    <View style={s.banner}>
       <Skeleton width={28} height={28} borderRadius={14} style={{ marginRight: 12 }} />
       <View style={{ flex: 1 }}>
         <Skeleton width={180} height={15} style={{ marginBottom: 6 }} />
@@ -100,18 +110,20 @@ export function BannerSkeleton() {
 
 // Pantalla completa de loading con skeletons
 export function DashboardSkeleton() {
+  const c = useThemeColors();
+  const s = useMemo(() => createStyles(c), [c]);
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       {/* Header Skeleton */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
+      <View style={s.header}>
+        <View style={s.logoContainer}>
           <Skeleton width={50} height={50} borderRadius={14} style={{ marginRight: 12 }} />
           <View>
             <Skeleton width={80} height={26} style={{ marginBottom: 4 }} />
             <Skeleton width={120} height={12} />
           </View>
         </View>
-        <View style={styles.updateInfo}>
+        <View style={s.updateInfo}>
           <Skeleton width={80} height={10} style={{ marginBottom: 4 }} />
           <Skeleton width={50} height={16} />
         </View>
@@ -124,14 +136,14 @@ export function DashboardSkeleton() {
       <MainCardSkeleton />
 
       {/* Grid Skeleton */}
-      <View style={styles.cardGrid}>
+      <View style={s.cardGrid}>
         <SecondaryCardSkeleton />
         <SecondaryCardSkeleton />
       </View>
 
       {/* Comparison Card Skeleton */}
-      <View style={styles.comparisonCard}>
-        <View style={styles.comparisonHeader}>
+      <View style={s.comparisonCard}>
+        <View style={s.comparisonHeader}>
           <Skeleton width={20} height={20} borderRadius={10} style={{ marginRight: 8 }} />
           <Skeleton width={140} height={14} />
         </View>
@@ -141,83 +153,85 @@ export function DashboardSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-    padding: 20,
-    paddingTop: 50,
-  },
-  skeleton: {
-    backgroundColor: '#334155',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  updateInfo: {
-    alignItems: 'flex-end',
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(51, 65, 85, 0.5)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  mainCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitleContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  rateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardGrid: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  secondaryCard: {
-    flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 6,
-    borderWidth: 1,
-    borderColor: '#334155',
-    alignItems: 'center',
-  },
-  comparisonCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  comparisonHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});
+function createStyles(c: Palette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+      padding: 20,
+      paddingTop: 50,
+    },
+    skeleton: {
+      backgroundColor: c.skeleton,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 24,
+    },
+    logoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    updateInfo: {
+      alignItems: 'flex-end',
+    },
+    banner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.accentSoft,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: c.accentBorder,
+    },
+    mainCard: {
+      backgroundColor: c.card,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    cardTitleContainer: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    rateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    cardGrid: {
+      flexDirection: 'row',
+      marginBottom: 16,
+    },
+    secondaryCard: {
+      flex: 1,
+      backgroundColor: c.card,
+      borderRadius: 16,
+      padding: 16,
+      marginHorizontal: 6,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    comparisonCard: {
+      backgroundColor: c.card,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    comparisonHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+  });
+}

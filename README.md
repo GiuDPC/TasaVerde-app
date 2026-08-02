@@ -1,282 +1,87 @@
 # TasaVerde
 
-Real-time Venezuelan Bolivar exchange rate application. Compares BCV (Central Bank of Venezuela) with Binance P2P automatically.
+App de tasas de cambio en Venezuela: compara BCV vs Binance P2P y te dice la mejor opción. Premium, offline-first, con sensación nativa.
 
 ![React Native](https://img.shields.io/badge/React_Native-20232A?logo=react&logoColor=61DAFB)
 ![Expo](https://img.shields.io/badge/Expo-000020?logo=expo&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
-
----
-
-## Table of Contents
-
-- [About](#about)
-- [Screenshots](#screenshots)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [API Endpoints](#api-endpoints)
-- [Deployment](#deployment)
-
----
-
-## About
-
-TasaVerde solves the daily problem Venezuelans face: finding the best exchange rate. Instead of checking multiple sources (BCV website, Binance, Instagram), users get everything in one app with automatic updates every 15 minutes.
-
-### Key Highlights
-
-- Real-time BCV and Binance P2P rates
-- Automatic best option detection
-- Built-in calculator with Pago Movil formatting
-- Historical charts (7, 30, 90 days)
-- Custom price alerts
-- Authentication with Supabase (email/password + Google OAuth)
-- Over-the-Air updates (no APK reinstall needed for most changes)
-
----
-
-## Screenshots
-
-### Login Screen
-
-![Login](docs/screenshots/Login.png)
-
-### Dashboard
-
-![Dashboard](docs/screenshots/Dashboard.png)
-
-### Calculator
-
-![Calculator](docs/screenshots/Calculator.png)
-
-### Historical Charts
-
-![Graphics](docs/screenshots/Graphics.png)
-
-### Price Alerts
-
-![Alerts](docs/screenshots/Alerts.png)
 
 ---
 
 ## Features
 
-### Authentication
-
-- Email and password registration/login
-- Google OAuth integration (expo-auth-session)
-- Session persistence with AsyncStorage
-- Secure logout with confirmation
-
 ### Dashboard
 
-- BCV USD and EUR rates
-- Binance P2P rate
-- Best option indicator
-- Percentage comparison
-- Pull-to-refresh
-- Last updated timestamp
+- Tasas BCV (USD y EUR) y Binance P2P en tiempo real
+- Detección automática de la mejor opción + % de diferencia
+- Pull-to-refresh y timestamp de última actualización
+- Funciona **offline**: muestra la última tasa guardada y avisa "Sin conexión"
 
-### Calculator
+### Calculadora
 
-- Bidirectional USD to Bs conversion
-- Automatic thousands separator (3.500,00)
-- Copy button for Pago Movil
-- Haptic feedback
+- Conversión bidireccional USD ⇄ Bs
+- Formato venezolano (separador de miles, coma decimal)
+- Botón copiar para Pago Móvil con toast de confirmación
+- Feedback háptico en cada acción
 
-### Historical Charts
+### Historial
 
-- SVG line charts
-- Period selector (7, 30, 90 days)
-- Min, max, average statistics
-- Trend percentage
+- Resumen de mínimo, máximo y promedio por día
+- Usa una tasa de un día como tasa activa ("Usar tasa de hoy")
 
-### Price Alerts
+### Personalización
 
-- Custom alerts: "If price goes above X" or "If price drops below X"
-- Local persistence with AsyncStorage
-- Automatic verification on rate updates
+- Tema oscuro/claro con transición circular estilo Telegram
+- 8 colores de acento
+- Splash screen animado
 
 ---
 
 ## Tech Stack
 
-### Frontend (Mobile App)
+| Technology                 | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| Expo SDK 52 + RN 0.76      | Base framework                       |
+| TypeScript                 | Type safety                          |
+| React Navigation (tabs)    | Navegación con tab bar flotante      |
+| TanStack Query             | Data fetching y caché                |
+| AsyncStorage               | Persistencia offline (caché + historial) |
+| @react-native-community/netinfo | Detección de conexión            |
+| react-native-reanimated    | Animaciones                          |
+| expo-haptics / expo-clipboard | Feedback háptico y portapapeles   |
 
-| Technology       | Purpose                               |
-| ---------------- | ------------------------------------- |
-| Expo SDK 52      | Base framework                        |
-| React Native     | Cross-platform UI                     |
-| TypeScript       | Type safety                           |
-| React Navigation | Tab navigation                        |
-| TanStack Query   | Data fetching and caching             |
-| Supabase         | Authentication (email + Google OAuth) |
-| react-native-svg | Icons and charts                      |
-| expo-haptics     | Tactile feedback                      |
-| expo-clipboard   | Copy to clipboard                     |
-| expo-updates     | Over-the-Air updates                  |
-| AsyncStorage     | Local persistence                     |
-
-### Backend (Server)
-
-| Technology        | Purpose               |
-| ----------------- | --------------------- |
-| Node.js + Express | HTTP server           |
-| TypeScript        | Type safety           |
-| Cheerio           | BCV web scraping      |
-| Axios             | HTTP requests         |
-| CORS              | Cross-origin security |
-
-### Authentication
-
-| Service              | Purpose                               |
-| -------------------- | ------------------------------------- |
-| Supabase             | Auth backend (email/password + OAuth) |
-| Google Cloud Console | OAuth 2.0 credentials                 |
-| expo-auth-session    | OAuth flow handling                   |
-| expo-web-browser     | Secure browser for OAuth              |
+Backend: **kambio-server** (Express, scraping BCV + API Binance P2P) en Render.
 
 ---
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Mobile App (Expo)                       │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │  Auth    │  │Dashboard │  │Calculator│  │ History  │    │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    │
-└───────┼─────────────┼─────────────┼─────────────┼───────────┘
-        │             │             │             │
-        ├─────────────┴──────┬──────┴─────────────┘
-        │                    │
-   ┌────▼────┐         ┌─────▼──────┐
-   │Supabase │         │  Backend   │
-   │  Auth   │         │  (Express) │
-   └─────────┘         └─────┬──────┘
-                             │
-                    ┌────────┴────────┐
-                    │                 │
-              ┌─────▼─────┐     ┌─────▼─────┐
-              │ BCV Site  │     │ Binance   │
-              │(Scraping) │     │ P2P API   │
-              └───────────┘     └───────────┘
-```
-
-### Data Flow
-
-1. **Authentication**: User logs in via Supabase (email/password or Google OAuth)
-2. **Rate Fetching**: Backend scrapes BCV every 15 minutes, calls Binance API
-3. **Caching**: Backend caches rates in memory for instant responses
-4. **App Updates**: Mobile app fetches `/api/rates` and caches with TanStack Query
-5. **Historical Data**: Backend stores daily snapshots in `history.json`
-
----
-
-## Installation
-
-### Prerequisites
-
-- Node.js 18+
-- npm or pnpm
-- Expo Go app (on mobile device) or Android emulator
-
-### Backend Setup
-
-```bash
-cd server
-npm install
-
-# Create .env file
-echo "PORT=3000" > .env
-
-# Start server
-npm run dev
-# Server running at http://localhost:3000
-```
-
-### Frontend Setup
+## Instalación
 
 ```bash
 npm install
-
-# Create .env file with Supabase credentials
-echo "EXPO_PUBLIC_SUPABASE_URL=your_supabase_url" > .env
-echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key" >> .env
-
-# Start Expo
-npx expo start
-# Scan QR code with Expo Go
+npx expo start          # desarrollo
+npx expo start --tunnel # en un teléfono físico vía Expo Go
 ```
 
-### Supabase Configuration
-
-1. Create project at [supabase.com](https://supabase.com)
-2. Get URL and anon key from Settings > API
-3. Enable Email provider in Authentication > Providers
-4. (Optional) Configure Google OAuth:
-   - Create OAuth credentials in Google Cloud Console
-   - Add redirect URI: `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
-   - Paste Client ID and Secret in Supabase Google provider
-
----
-
-## API Endpoints
-
-| Endpoint              | Method | Description                         |
-| --------------------- | ------ | ----------------------------------- |
-| `/api/rates`          | GET    | Current BCV and Binance rates       |
-| `/api/history?days=7` | GET    | Historical data (7, 30, or 90 days) |
-| `/api/trend?days=7`   | GET    | Trend percentage only               |
-
-### Example Response: `/api/rates`
-
-```json
-{
-  "bcv": {
-    "usd": 37.25,
-    "eur": 44.48,
-    "date": "2024-02-09"
-  },
-  "binance": 49.12,
-  "bestOption": "bcv",
-  "lastUpdated": "2024-02-09T20:00:00Z"
-}
-```
-
----
-
-## Deployment
-
-### Backend (Render / Railway / Fly.io)
-
-1. Connect GitHub repository
-2. Set environment variables:
-   - `PORT=3000`
-3. Deploy with `npm run dev`
-
-### Mobile App (EAS Build)
-
-#### Generate APK
+Para probar en el navegador:
 
 ```bash
-npx eas-cli build -p android --profile preview
+npx expo start --web
 ```
 
-Build takes ~10-15 minutes. Download APK from the provided link.
-
-#### Over-the-Air Updates
-
-For JavaScript/styling changes (no new native dependencies):
+## Build de APK (EAS)
 
 ```bash
-eas update --branch preview --message "Description of changes"
+npx eas build -p android --profile preview --non-interactive
 ```
 
-Users get the update automatically on next app launch.
+El APK se descarga del link que imprime EAS (~10-15 min). No requiere Android SDK local: se compila en la nube.
+
+## Self-check
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm run check       # scripts/selfcheck.mts (15 tests)
+```
 
 ---
 
@@ -284,53 +89,41 @@ Users get the update automatically on next app launch.
 
 ```
 TasaVerde/
-├── App.tsx                     # Entry point with navigation
-├── app.json                    # Expo configuration
-├── eas.json                    # EAS Build configuration
-├── package.json                # Dependencies
+├── App.tsx                  # Entrada: ErrorBoundary + providers + tabs + splash
+├── app.json                 # Config Expo (package com.giudpc.tasaverde)
+├── eas.json                 # Perfiles de build (preview/production)
+├── scripts/selfcheck.mts    # Autochequeo de la lógica de tasas/theme
 │
-├── src/                        # Frontend source code
+├── src/
 │   ├── screens/
-│   │   ├── AuthScreen.tsx          # Login/Register
-│   │   ├── DashboardScreen.tsx     # Current rates
-│   │   ├── CalculatorScreen.tsx    # USD/Bs converter
-│   │   ├── HistoryScreen.tsx       # Historical charts
-│   │   └── AlertsScreen.tsx        # Price alerts
+│   │   ├── DashboardScreen.tsx     # Tasas en vivo + offline
+│   │   ├── CalculatorScreen.tsx    # Conversor USD/Bs
+│   │   └── HistoryScreen.tsx       # Historial diario + stats
 │   │
 │   ├── components/
-│   │   ├── Icon.tsx                # SVG icon system
-│   │   ├── SplashScreen.tsx        # Loading screen
-│   │   ├── AnimatedComponents.tsx  # Animations
-│   │   └── SkeletonLoader.tsx      # Loading skeletons
+│   │   ├── Icon.tsx                # Sistema de iconos SVG + badge BCV
+│   │   ├── CurrencyInput.tsx       # Input con máscara de formato
+│   │   ├── DayRateModal.tsx        # Detalle de tasa por día
+│   │   ├── SettingsSheet.tsx       # Hoja de ajustes (tema/acento)
+│   │   ├── Toast.tsx / OfflineManager.tsx / ErrorBoundary.tsx
+│   │   ├── SplashScreen.tsx / SkeletonLoader.tsx / AnimatedComponents.tsx
+│   │   └── FloatingTabBar.tsx      # Tab bar flotante premium
+│   │
+│   ├── state/
+│   │   ├── ThemeContext.tsx        # Scheme (dark/light) + acento persistidos
+│   │   └── ActiveRateContext.tsx   # Tasa activa (viva/histórica/personalizada)
 │   │
 │   ├── hooks/
-│   │   ├── useAuth.ts              # Authentication hook
-│   │   ├── useRates.ts             # Rates fetching hook
-│   │   └── useHistory.ts           # Historical data hook
+│   │   ├── useRates.ts             # Fetch + persistencia en caché
+│   │   └── useHistory.ts           # Historial local-first
 │   │
-│   └── services/
-│       ├── supabase.ts             # Supabase client + auth
-│       └── api.ts                  # HTTP client
-│
-├── server/                     # Backend Node.js
-│   ├── src/
-│   │   ├── index.ts                # Express server
-│   │   └── services/
-│   │       ├── bcv.ts              # BCV scraper
-│   │       ├── binance.ts          # Binance P2P API
-│   │       └── history.ts          # Historical data manager
+│   ├── services/
+│   │   ├── api.ts                  # Cliente HTTP (kambio-server)
+│   │   └── ratesStore.ts           # Capa AsyncStorage offline-first
 │   │
-│   └── data/
-│       └── history.json            # Stored historical rates
+│   └── theme.ts                    # Paleta + acentos
 │
-├── assets/                     # Static resources
-│   ├── icon.png                    # App icon
-│   ├── adaptive-icon.png           # Android adaptive icon
-│   ├── splash-icon.png             # Splash screen
-│   └── icons/                      # Custom SVG icons
-│
-└── docs/
-    └── screenshots/                # App screenshots
+└── assets/
 ```
 
 ---
@@ -338,7 +131,3 @@ TasaVerde/
 ## License
 
 Private project for personal and family use.
-
----
-
-**Developed with Expo and React Native**

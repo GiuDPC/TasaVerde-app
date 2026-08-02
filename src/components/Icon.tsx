@@ -1,46 +1,50 @@
-import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React, { ComponentProps } from 'react';
+import { View, StyleSheet, Image, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import BcvIcon from '../../assets/icons/Bank-icon-bcv.svg';
 import BinanceIcon from '../../assets/icons/Binance-icon.svg';
-import CalculatorIcon from '../../assets/icons/Calculator.svg';
-import DollarIcon from '../../assets/icons/Dollar.svg';
-import ArrowDownIcon from '../../assets/icons/Down-arrow.svg';
 import EuroIcon from '../../assets/icons/Euro-icon.svg';
-import GraphicIcon from '../../assets/icons/Graphic.svg';
-import LightIcon from '../../assets/icons/Light.svg';
-import HistorialMenuIcon from '../../assets/icons/Historialmenu.svg';
-import NotificacionesMenuIcon from '../../assets/icons/notificacionesMenu.svg';
-import TendenciaIcon from '../../assets/icons/tendencia.svg';
-import AlertIcon from '../../assets/icons/alert.svg';
-import CopiarIcon from '../../assets/icons/copiar-pegar.svg';
-import SiSubeIcon from '../../assets/icons/Sisube.svg';
-import SiBajaIcon from '../../assets/icons/Sibaja.svg';
-import LogoutIcon from '../../assets/icons/logout.svg';
+
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 const icons = {
-  bcv: BcvIcon,
-  binance: BinanceIcon,
-  calculator: CalculatorIcon,
-  dollar: DollarIcon,
-  arrowDown: ArrowDownIcon,
-  euro: EuroIcon,
-  graphic: GraphicIcon,
-  light: LightIcon,
-  historialMenu: HistorialMenuIcon,
-  notificacionesMenu: NotificacionesMenuIcon,
-  tendencia: TendenciaIcon,
-  alert: AlertIcon,
-  copiar: CopiarIcon,
-  sube: SiSubeIcon,
-  baja: SiBajaIcon,
-  logout: LogoutIcon,
+  calculator: 'calculator' as IoniconName,
+  dollar: 'logo-usd' as IoniconName,
+  arrowDown: 'arrow-down' as IoniconName,
+  graphic: 'stats-chart' as IoniconName,
+  light: 'bulb' as IoniconName,
+  historialMenu: 'time' as IoniconName,
+  tendencia: 'trending-up' as IoniconName,
+  trendingDown: 'trending-down' as IoniconName,
+  copiar: 'copy' as IoniconName,
+  ellipsis: 'ellipsis-horizontal' as IoniconName,
+  moon: 'moon' as IoniconName,
+  sunny: 'sunny' as IoniconName,
+  palette: 'color-palette' as IoniconName,
+  restore: 'refresh' as IoniconName,
+  refresh: 'refresh-circle' as IoniconName,
+  alertCircle: 'alert-circle' as IoniconName,
+  cash: 'cash' as IoniconName,
+  wallet: 'wallet' as IoniconName,
+  info: 'information-circle' as IoniconName,
+  close: 'close' as IoniconName,
+  checkmark: 'checkmark' as IoniconName,
+  chevronDown: 'chevron-down' as IoniconName,
+  wifi: 'wifi' as IoniconName,
+  cloudOffline: 'cloud-offline' as IoniconName,
 } as const;
 
-// Iconos multicolor que tienen sus propios colores internos
-const multiColorIcons = new Set(['dollar', 'light', 'alert']);
+// Logos de marca que se renderizan como SVG propio.
+const brandIcons = new Set(['bcv', 'binance', 'euro']);
 
-export type IconName = keyof typeof icons;
+const brandSvg = {
+  bcv: BcvIcon,
+  binance: BinanceIcon,
+  euro: EuroIcon,
+} as const;
+
+export type IconName = keyof typeof icons | keyof typeof brandSvg;
 
 interface IconProps {
   name: IconName;
@@ -50,18 +54,49 @@ interface IconProps {
 }
 
 export function Icon({ name, size = 24, color = '#F8FAFC', style }: IconProps) {
-  const SvgIcon = icons[name];
-  if (!SvgIcon) return null;
+  if (name === 'bcv') {
+    return <BcvBadge size={size} style={style} />;
+  }
+  if (name in brandSvg) {
+    const SvgIcon = brandSvg[name as keyof typeof brandSvg];
+    return (
+      <View style={[styles.container, style]}>
+        <SvgIcon width={size} height={size} />
+      </View>
+    );
+  }
 
-  const isMultiColor = multiColorIcons.has(name);
+  const ionName = icons[name as keyof typeof icons];
+  if (!ionName) return null;
 
   return (
     <View style={[styles.container, style]}>
-      {isMultiColor ? (
-        <SvgIcon width={size} height={size} />
-      ) : (
-        <SvgIcon width={size} height={size} fill={color} stroke={color} />
-      )}
+      <Ionicons name={ionName} size={size} color={color} />
+    </View>
+  );
+}
+
+function BcvBadge({ size, style }: { size: number; style?: any }) {
+  return (
+    <View
+      style={[
+        styles.container,
+        style,
+        { width: size, height: size, position: 'relative' },
+      ]}
+    >
+      <BcvIcon width={size} height={size} style={StyleSheet.absoluteFill} />
+      <Text
+        style={{
+          color: '#FFFFFF',
+          fontWeight: '800',
+          fontSize: size * 0.4,
+          letterSpacing: size * 0.012,
+        }}
+        allowFontScaling={false}
+      >
+        BCV
+      </Text>
     </View>
   );
 }

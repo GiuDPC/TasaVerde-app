@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Monto Bancario (Bs.)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .bank-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 360px;
+        }
+        .bank-card h2 {
+            margin-top: 0;
+            color: #1a202c;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin-top: 25px;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .currency-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .currency-symbol {
+            position: absolute;
+            left: 14px;
+            color: #718096;
+            font-weight: bold;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+        .bank-input {
+            width: 100%;
+            padding: 14px 14px 14px 45px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            color: #2d3748;
+            text-align: left;
+            transition: border-color 0.2s;
+        }
+        .bank-input:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 14px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-submit:hover {
+            background-color: #2b6cb0;
+        }
+        .output-data {
+            margin-top: 20px;
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #4a5568;
+            display: none;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bank-card">
+    <h2>Transferencia / Pago Móvil</h2>
+    
+    <div class="input-group">
+        <label for="montoBs">Monto a transferir</label>
+        <div class="currency-wrapper">
+            <span class="currency-symbol">Bs.</span>
+            <!-- Input tipo text para poder controlar la máscara perfectamente -->
+            <input 
+                type="text" 
+                id="montoBs" 
+                class="bank-input" 
+                placeholder="0,00" 
+                inputmode="numeric"
+                autocomplete="off"
+            >
+        </div>
+    </div>
+
+    <button class="btn-submit" id="btnProcesar">Continuar</button>
+    
+    <div class="output-data" id="output"></div>
+</div>
+
+<script>
+    const inputMonto = document.getElementById('montoBs');
+    const btnProcesar = document.getElementById('btnProcesar');
+    const output = document.getElementById('output');
+
+    // Máximo de caracteres numéricos permitidos (11 dígitos = 999.999.999,99 Bs.)
+    const MAX_DIGITOS = 11;
+
+    inputMonto.addEventListener('input', (e) => {
+        // 1. Limpiar el valor dejando ÚNICAMENTE los números
+        let valorLimpio = e.target.value.replace(/\D/g, '');
+
+        // 2. Aplicar restricción de longitud máxima
+        if (valorLimpio.length > MAX_DIGITOS) {
+            valorLimpio = valorLimpio.slice(0, MAX_DIGITOS);
+        }
+
+        // 3. Si se borra todo, dejarlo vacío o reiniciar
+        if (valorLimpio === '') {
+            e.target.value = '';
+            return;
+        }
+
+        // 4. Convertir a entero para remover ceros a la izquierda innecesarios
+        let numeroEntero = parseInt(valorLimpio, 10);
+        
+        // 5. Formatear simulando la escritura de derecha a izquierda
+        let valorFormateado = (numeroEntero / 100).toLocaleString('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        // 6. Asignar el valor formateado visualmente al input
+        e.target.value = valorFormateado;
+    });
+
+    // Restricción extra: Evitar que el usuario mueva el cursor al medio o pegue letras
+    inputMonto.addEventListener('keydown', (e) => {
+        // Permitir teclas de control básicas (Backspace, Delete, Flechas, Tab)
+        const teclasPermitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+        if (teclasPermitidas.includes(e.key)) return;
+
+        // Bloquear cualquier tecla que no sea un número
+        if (!/\d/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    // Simulación del envío de datos al Backend del Banco
+    btnProcesar.addEventListener('click', () => {
+        const valorVisual = inputMonto.value;
+        
+        if (!valorVisual || valorVisual === '0,00') {
+            alert('Error bancario: El monto debe ser mayor a Bs. 0,00');
+            output.style.display = 'none';
+            return;
+        }
+
+        // Obtener el valor flotante real para cálculos numéricos
+        // Reemplaza puntos de miles por nada y la coma decimal por punto
+        const valorFloat = parseFloat(valorVisual.replace(/\./g, '').replace(',', '.'));
+
+        output.style.display = 'block';
+        output.innerHTML = `
+            <strong>Datos enviados al Banco:</strong><br>
+            • Mostrado en Pantalla: Bs. ${valorVisual}<br>
+            • Flotante para operaciones: ${valorFloat}<br>
+            • JSON para API: {"amount": ${valorFloat}, "currency": "VES"}
+        `;
+    });
+</script>
+
+</body>
+</html>

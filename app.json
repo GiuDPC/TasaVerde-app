@@ -3,10 +3,10 @@
     "name": "TasaVerde",
     "slug": "v-rate",
     "scheme": "tasaverde",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -41,6 +41,9 @@
       "eas": {
         "projectId": "03bd6ce6-53aa-4206-95cb-4b5bd86f52ba"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

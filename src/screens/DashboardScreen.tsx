@@ -1,246 +1,393 @@
 import React, { useMemo, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { hapticImpact, hapticSelection, hapticSuccess } from '../utils/haptics';
 import { useRates } from '../hooks/useRates';
 import { FadeInView, PulsingBadge } from '../components/AnimatedComponents';
-import { Icon, AppLogo } from '../components/Icon';
+import { AnimatedNumber } from '../components/AnimatedNumber';
+import { Icon } from '../components/Icon';
 import { DashboardSkeleton } from '../components/SkeletonLoader';
-import { signOut } from '../services/supabase';
+import { useThemeColors, useTheme } from '../state/ThemeContext';
+import { Palette, spacing, radii } from '../theme';
 
-function handleLogout() {
-  Alert.alert(
-    'Cerrar Sesion',
-    'Seguro que quieres salir?',
-    [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Salir',
-        style: 'destructive',
-        onPress: async () => {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          await signOut();
-        },
-      },
-    ]
-  );
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'ahora';
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `hace ${h} h`;
+  return `hace ${Math.floor(h / 24)} d`;
 }
 
-const RateHeader = ({ lastUpdated }: { lastUpdated: string }) => (
-  <View style={styles.header}>
-    <View style={styles.logoContainer}>
-      <AppLogo size={50} />
-      <View>
-        <Text style={styles.logo}>TasaVerde</Text>
-        <Text style={styles.logoSubtitle}>Tasas en Tiempo Real</Text>
-      </View>
-    </View>
-    <View style={styles.headerRight}>
-      <View style={styles.updateInfo}>
-        <Text style={styles.updateLabel}>ACTUALIZADO</Text>
-        <Text style={styles.updateTime}>{lastUpdated}</Text>
-      </View>
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Icon name="logout" size={22} color="#EF4444" />
-      </TouchableOpacity>
-    </View>
-  </View>
-);
-
 export function DashboardScreen() {
-  const { data: rates, isLoading, isError, refetch, isRefetching } = useRates();
+  const { data: rates, isLoading, refetch, isRefetching } = useRates();
+  const c = useThemeColors();
+  const { openSettings } = useTheme();
+  const s = useMemo(() => createStyles(c), [c]);
+
+  const offline = rates?.source === 'cache';
 
   const diferencia = useMemo(() => {
-    if (!rates) return "0.0";
+    if (!rates) return '0.0';
     return ((rates.binance - rates.bcv.usd) / rates.bcv.usd * 100).toFixed(1);
   }, [rates]);
 
-  // Refetch con haptic feedback
-  const handleRefresh = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleRefresh = useCallback(() => {
+    hapticImpact(Haptics.ImpactFeedbackStyle.Light);
     refetch();
   }, [refetch]);
 
-  // Retry con haptic feedback
-  const handleRetry = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const handleRetry = useCallback(() => {
+    hapticImpact(Haptics.ImpactFeedbackStyle.Medium);
     refetch();
   }, [refetch]);
 
   if (isLoading) return <DashboardSkeleton />;
 
-  if (isError || !rates) return (
-    <View style={styles.errorContainer}>
-      <Text style={styles.errorEmoji}>⚠️</Text>
-      <Text style={styles.errorText}>Error al cargar las tasas</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-        <Text style={styles.retryText}>🔄 Reintentar</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  // Si hay datos en caché seguimos mostrándolos aunque el refetch falle
+  // (marcados como offline); solo falla la pantalla si no hay NADA que mostrar.
+  if (!rates) {
+    return (
+      <View style={s.errorContainer}>
+        <Icon name="alertCircle" size={64} color={c.red} />
+        <Text style={s.errorText}>Error al cargar las tasas</Text>
+        <Text style={s.errorSub}>Sin conexión y sin datos guardados</Text>
+        <TouchableOpacity style={s.retryButton} onPress={handleRetry}>
+          <Icon name="restore" size={18} color="#FFFFFF" />
+          <Text style={s.retryText}>Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-  const lastUpdated = rates.lastUpdated 
-    ? new Date(rates.lastUpdated).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }) 
-    : '--:--';
+  const lastUpdated = offline
+    ? timeAgo(rates.fetchedAt)
+    : new Date(rates.lastUpdated).toLocaleTimeString('es-VE', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      contentContainerStyle={styles.scrollContent}
+    <ScrollView
+      style={s.container}
+      contentContainerStyle={s.scrollContent}
       refreshControl={
-        <RefreshControl 
-          refreshing={isRefetching} 
-          onRefresh={handleRefresh} 
-          tintColor="#10B981"
-          colors={['#10B981']}
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={handleRefresh}
+          tintColor={c.accent}
+          colors={[c.accent]}
         />
       }
     >
       <FadeInView delay={0}>
-        <RateHeader lastUpdated={lastUpdated} />
+        <View style={s.header}>
+          <View style={s.logoContainer}>
+            <Icon name="graphic" size={40} color={c.accent} />
+            <View style={s.logoText}>
+              <Text style={s.logo}>TasaVerde</Text>
+              <Text style={s.logoSubtitle}>Tasas en tiempo real</Text>
+            </View>
+          </View>
+          <View style={s.headerRight}>
+            <TouchableOpacity
+              style={s.settingsButton}
+              onPress={openSettings}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Configuración"
+            >
+              <Icon name="ellipsis" size={20} color={c.textMuted} />
+            </TouchableOpacity>
+            <View style={s.updateInfo}>
+              {offline ? (
+                <View style={s.offlineBadge}>
+                  <View style={s.offlineDot} />
+                  <Text style={s.offlineText}>Sin conexión</Text>
+                </View>
+              ) : (
+                <Text style={s.updateLabel}>ACTUALIZADO</Text>
+              )}
+              <Text style={s.updateTime}>{lastUpdated}</Text>
+            </View>
+          </View>
+        </View>
       </FadeInView>
 
-      <FadeInView delay={100}>
-        <View style={styles.bestOptionBanner}>
-          <View style={styles.lightIconContainer}>
-             <Icon name="light" size={28} color="#F59E0B" />
+      <FadeInView delay={80}>
+        <View style={s.bestOptionBanner}>
+          <View style={s.lightIconContainer}>
+            <Icon name="light" size={28} color={c.amber} />
           </View>
-          <View style={styles.bestOptionText}>
-            <Text style={styles.bestOptionTitle}>
-              Mejor opción: <Text style={styles.bestOptionHighlight}>{rates.bestOption === 'bcv' ? 'BCV' : 'Binance'}</Text>
+          <View style={s.bestOptionText}>
+            <Text style={s.bestOptionTitle}>
+              Mejor opción:{' '}
+              <Text style={s.bestOptionHighlight}>
+                {rates.bestOption === 'bcv' ? 'BCV' : 'Binance'}
+              </Text>
             </Text>
-            <Text style={styles.bestOptionSubtitle}>Diferencia del {diferencia}% entre tasas</Text>
+            <Text style={s.bestOptionSubtitle}>
+              Diferencia del {diferencia}% entre tasas
+            </Text>
+          </View>
+        </View>
+      </FadeInView>
+
+      <FadeInView delay={140}>
+        <View style={[s.mainCard, rates.bestOption === 'bcv' && s.mainCardBest]}>
+          <View style={s.cardHeader}>
+            <View style={s.cardIconContainer}>
+              <Icon name="bcv" size={26} color={c.accent} />
+            </View>
+            <View style={s.cardTitleContainer}>
+              <Text style={s.cardTitle}>BCV Dólar</Text>
+              <Text style={s.cardSubtitle}>Banco Central de Venezuela</Text>
+            </View>
+            {rates.bestOption === 'bcv' && <PulsingBadge text="MEJOR" color={c.accent} />}
+          </View>
+          <View style={s.rateRow}>
+            <AnimatedNumber value={rates.bcv.usd} variant="bs" style={s.mainRate} />
+            <Text style={s.mainCurrency}>Bs/$</Text>
           </View>
         </View>
       </FadeInView>
 
       <FadeInView delay={200}>
-        <View style={[styles.mainCard, rates.bestOption === 'bcv' && styles.mainCardBest]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconContainer}><Icon name="bcv" size={26} color="#10B981" /></View>
-            <View style={styles.cardTitleContainer}>
-              <Text style={styles.cardTitle}>BCV Dólar</Text>
-              <Text style={styles.cardSubtitle}>Banco Central de Venezuela</Text>
+        <View style={s.cardGrid}>
+          <View style={s.secondaryCard}>
+            <View style={[s.secondaryIcon, { backgroundColor: c.blueSoft }]}>
+              <Icon name="euro" size={24} color={c.blue} />
             </View>
-            {rates.bestOption === 'bcv' && <PulsingBadge text="MEJOR" color="#10B981" />}
+            <Text style={s.secondaryTitle}>BCV Euro</Text>
+            <AnimatedNumber value={rates.bcv.eur} variant="bs" style={s.secondaryRate} />
+            <Text style={s.secondaryUnit}>Bs/€</Text>
           </View>
-          <View style={styles.rateRow}>
-            <Text style={styles.mainRate}>{rates.bcv.usd.toFixed(2)}</Text>
-            <Text style={styles.mainCurrency}>Bs/$</Text>
+
+          <View style={[s.secondaryCard, rates.bestOption === 'binance' && s.secondaryCardBest]}>
+            <View style={[s.secondaryIcon, { backgroundColor: c.binanceSoft }]}>
+              <Icon name="binance" size={24} color={c.binance} />
+            </View>
+            <Text style={s.secondaryTitle}>Binance P2P</Text>
+            <AnimatedNumber value={rates.binance} variant="bs" style={s.secondaryRate} />
+            <Text style={s.secondaryUnit}>Bs/$</Text>
+            {rates.bestOption === 'binance' && (
+              <View style={s.secondaryBestBadge}>
+                <Text style={s.secondaryBestText}>MEJOR</Text>
+              </View>
+            )}
           </View>
         </View>
       </FadeInView>
 
-      <FadeInView delay={300}>
-        <View style={styles.cardGrid}>
-          <View style={styles.secondaryCard}>
-             <View style={[styles.secondaryIcon, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}><Icon name="euro" size={24} color="#3B82F6" /></View>
-             <Text style={styles.secondaryTitle}>BCV Euro</Text>
-             <Text style={styles.secondaryRate}>{rates.bcv.eur.toFixed(2)}</Text>
-             <Text style={styles.secondaryUnit}>Bs/€</Text>
+      <FadeInView delay={260}>
+        <View style={s.comparisonCard}>
+          <View style={s.comparisonHeader}>
+            <Icon name="graphic" size={20} color={c.accent} />
+            <Text style={s.comparisonTitle}>Comparación de Tasas</Text>
           </View>
-
-          <View style={[styles.secondaryCard, rates.bestOption === 'binance' && styles.secondaryCardBest]}>
-             <View style={[styles.secondaryIcon, { backgroundColor: 'rgba(240, 185, 11, 0.2)' }]}><Icon name="binance" size={24} color="#F0B90B" /></View>
-             <Text style={styles.secondaryTitle}>Binance P2P</Text>
-             <Text style={styles.secondaryRate}>{rates.binance.toFixed(2)}</Text>
-             <Text style={styles.secondaryUnit}>Bs/$</Text>
-             {rates.bestOption === 'binance' && (
-               <View style={styles.secondaryBestBadge}>
-                 <Text style={styles.secondaryBestText}>MEJOR</Text>
-               </View>
-             )}
+          <View style={s.comparisonRow}>
+            <Text style={s.comparisonLabel}>BCV vs Binance:</Text>
+            <View style={s.comparisonValueWrap}>
+              <Icon
+                name={parseFloat(diferencia) > 0 ? 'tendencia' : 'trendingDown'}
+                size={16}
+                color={parseFloat(diferencia) > 0 ? c.red : c.accent}
+              />
+              <Text
+                style={[
+                  s.comparisonValue,
+                  parseFloat(diferencia) > 0 ? s.comparisonUp : s.comparisonDown,
+                ]}
+              >
+                {diferencia}%
+              </Text>
+            </View>
           </View>
-        </View>
-      </FadeInView>
-
-      <FadeInView delay={400}>
-        <View style={styles.comparisonCard}>
-          <View style={styles.comparisonHeader}>
-            <Icon name="graphic" size={20} color="#10B981" />
-            <Text style={styles.comparisonTitle}>Comparación de Tasas</Text>
-          </View>
-          <View style={styles.comparisonRow}>
-            <Text style={styles.comparisonLabel}>BCV vs Binance:</Text>
-            <Text style={[
-              styles.comparisonValue,
-              parseFloat(diferencia) > 0 ? styles.comparisonUp : styles.comparisonDown
-            ]}>
-              {parseFloat(diferencia) > 0 ? '📈' : '📉'} {diferencia}%
-            </Text>
-          </View>
-          <Text style={styles.comparisonExplain}>
-            {parseFloat(diferencia) > 0 
+          <Text style={s.comparisonExplain}>
+            {parseFloat(diferencia) > 0
               ? `Binance está ${diferencia}% más alto que BCV`
-              : `BCV está ${Math.abs(parseFloat(diferencia))}% más alto que Binance`
-            }
+              : `BCV está ${Math.abs(parseFloat(diferencia))}% más alto que Binance`}
           </Text>
         </View>
       </FadeInView>
 
-      <FadeInView delay={500}>
-        <View style={styles.footerContainer}>
-          <Icon name="arrowDown" size={16} color="#64748B" />
-          <Text style={styles.footer}>Desliza hacia abajo para actualizar</Text>
+      <FadeInView delay={320}>
+        <View style={s.footerContainer}>
+          <Icon name="arrowDown" size={16} color={c.textDim} />
+          <Text style={s.footer}>Desliza hacia abajo para actualizar</Text>
         </View>
       </FadeInView>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
-  scrollContent: { padding: 20, paddingTop: 50, paddingBottom: 40 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F172A' },
-  loadingText: { color: '#94A3B8', marginTop: 16, fontSize: 16 },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F172A', padding: 20 },
-  errorEmoji: { fontSize: 64, marginBottom: 16 },
-  errorText: { color: '#F8FAFC', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
-  retryButton: { backgroundColor: '#10B981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  retryText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  logoContainer: { flexDirection: 'row', alignItems: 'center' },
-  logoIcon: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  logo: { fontSize: 26, fontWeight: 'bold', color: '#F8FAFC' },
-  logoSubtitle: { fontSize: 12, color: '#94A3B8' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  updateInfo: { alignItems: 'flex-end' },
-  updateLabel: { fontSize: 10, color: '#64748B', letterSpacing: 0.5 },
-  updateTime: { fontSize: 16, fontWeight: 'bold', color: '#F8FAFC' },
-  logoutButton: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(239, 68, 68, 0.15)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' },
-  bestOptionBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 1, borderColor: '#10B981', borderRadius: 16, padding: 16, marginBottom: 20 },
-  lightIconContainer: { marginRight: 12 },
-  bestOptionText: { flex: 1 },
-  bestOptionTitle: { fontSize: 15, color: '#F8FAFC' },
-  bestOptionHighlight: { color: '#10B981', fontWeight: 'bold' },
-  bestOptionSubtitle: { fontSize: 12, color: '#94A3B8', marginTop: 2 },
-  mainCard: { backgroundColor: '#1E293B', borderRadius: 20, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#334155' },
-  mainCardBest: { backgroundColor: '#1E3A2B', borderColor: '#10B981', borderWidth: 2 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  cardIconContainer: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(16, 185, 129, 0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  cardTitleContainer: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC' },
-  cardSubtitle: { fontSize: 12, color: '#64748B' },
-  rateRow: { flexDirection: 'row', alignItems: 'baseline' },
-  mainRate: { fontSize: 52, fontWeight: 'bold', color: '#F8FAFC' },
-  mainCurrency: { fontSize: 20, color: '#94A3B8', marginLeft: 8 },
-  cardGrid: { flexDirection: 'row', marginBottom: 16 },
-  secondaryCard: { flex: 1, backgroundColor: '#1E293B', borderRadius: 16, padding: 16, marginHorizontal: 6, borderWidth: 1, borderColor: '#334155', alignItems: 'center' },
-  secondaryCardBest: { borderColor: '#10B981', borderWidth: 2, backgroundColor: '#1E3A2B' },
-  secondaryIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  secondaryTitle: { fontSize: 12, color: '#94A3B8', marginBottom: 8 },
-  secondaryRate: { fontSize: 26, fontWeight: 'bold', color: '#F8FAFC' },
-  secondaryUnit: { fontSize: 12, color: '#64748B' },
-  secondaryBestBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#10B981', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4 },
-  secondaryBestText: { fontSize: 8, fontWeight: 'bold', color: '#FFFFFF' },
-  comparisonCard: { backgroundColor: '#1E293B', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#334155' },
-  comparisonHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  comparisonTitle: { fontSize: 14, fontWeight: 'bold', color: '#F8FAFC', marginLeft: 8 },
-  comparisonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  comparisonLabel: { fontSize: 14, color: '#94A3B8' },
-  comparisonValue: { fontSize: 16, fontWeight: 'bold' },
-  comparisonUp: { color: '#EF4444' },
-  comparisonDown: { color: '#10B981' },
-  comparisonExplain: { fontSize: 12, color: '#64748B', fontStyle: 'italic' },
-  footerContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  footer: { color: '#64748B', fontSize: 12, marginLeft: 8 },
-});
+function createStyles(c: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    scrollContent: { padding: spacing.screen, paddingTop: spacing.screenTop, paddingBottom: spacing.bottom },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.bg,
+      padding: 20,
+      gap: 10,
+    },
+    errorText: { color: c.text, fontSize: 20, fontWeight: 'bold', marginBottom: 2 },
+    errorSub: { color: c.textMuted, fontSize: 13, marginBottom: 10 },
+    retryButton: {
+      backgroundColor: c.accent,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    retryText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 24,
+    },
+    headerRight: { alignItems: 'flex-end', gap: 8 },
+    settingsButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: c.cardInner,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoContainer: { flexDirection: 'row', alignItems: 'center' },
+    logoText: { marginLeft: 12 },
+    logo: { fontSize: 24, fontWeight: 'bold', color: c.text },
+    logoSubtitle: { fontSize: 12, color: c.textMuted },
+    updateInfo: { alignItems: 'flex-end' },
+    updateLabel: { fontSize: 10, color: c.textDim, letterSpacing: 0.5 },
+    updateTime: { fontSize: 14, fontWeight: 'bold', color: c.text },
+    offlineBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.binanceSoft,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      marginBottom: 2,
+    },
+    offlineDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: c.binance,
+      marginRight: 5,
+    },
+    offlineText: { fontSize: 10, fontWeight: 'bold', color: c.binance },
+    bestOptionBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.accentSoft,
+      borderWidth: 1,
+      borderColor: c.accent,
+      borderRadius: radii.card,
+      padding: 16,
+      marginBottom: 20,
+    },
+    lightIconContainer: { marginRight: 12 },
+    bestOptionText: { flex: 1 },
+    bestOptionTitle: { fontSize: 15, color: c.text },
+    bestOptionHighlight: { color: c.accent, fontWeight: 'bold' },
+    bestOptionSubtitle: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    mainCard: {
+      backgroundColor: c.card,
+      borderRadius: radii.mainCard,
+      padding: 20,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    mainCardBest: { backgroundColor: c.cardBest, borderColor: c.accent, borderWidth: 2 },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+    cardIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: c.accentSoft,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    cardTitleContainer: { flex: 1 },
+    cardTitle: { fontSize: 18, fontWeight: 'bold', color: c.text },
+    cardSubtitle: { fontSize: 12, color: c.textDim },
+    rateRow: { flexDirection: 'row', alignItems: 'baseline' },
+    mainRate: { fontSize: 48, fontWeight: 'bold', color: c.text },
+    mainCurrency: { fontSize: 18, color: c.textMuted, marginLeft: 8 },
+    cardGrid: { flexDirection: 'row', marginBottom: 16 },
+    secondaryCard: {
+      flex: 1,
+      backgroundColor: c.card,
+      borderRadius: radii.card,
+      padding: 16,
+      marginHorizontal: 6,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    secondaryCardBest: { borderColor: c.accent, borderWidth: 2, backgroundColor: c.cardBest },
+    secondaryIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    secondaryTitle: { fontSize: 12, color: c.textMuted, marginBottom: 8 },
+    secondaryRate: { fontSize: 24, fontWeight: 'bold', color: c.text },
+    secondaryUnit: { fontSize: 12, color: c.textDim },
+    secondaryBestBadge: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      backgroundColor: c.accent,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    secondaryBestText: { fontSize: 8, fontWeight: 'bold', color: '#FFFFFF' },
+    comparisonCard: {
+      backgroundColor: c.card,
+      borderRadius: radii.card,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    comparisonHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+    comparisonTitle: { fontSize: 14, fontWeight: 'bold', color: c.text, marginLeft: 8 },
+    comparisonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    comparisonLabel: { fontSize: 14, color: c.textMuted },
+    comparisonValueWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    comparisonValue: { fontSize: 16, fontWeight: 'bold' },
+    comparisonUp: { color: c.red },
+    comparisonDown: { color: c.accent },
+    comparisonExplain: { fontSize: 12, color: c.textDim, fontStyle: 'italic' },
+    footerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    footer: { color: c.textDim, fontSize: 12, marginLeft: 8 },
+  });
+}
