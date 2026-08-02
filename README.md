@@ -20,7 +20,8 @@ App de tasas de cambio en Venezuela: compara BCV vs Binance P2P y te dice la mej
 ### Calculadora
 
 - Conversión bidireccional USD ⇄ Bs
-- Formato venezolano (separador de miles, coma decimal)
+- Formato venezolano con soporte flexible para comas y puntos decimales
+- UI redondeada optimizada para Android y Web
 - Botón copiar para Pago Móvil con toast de confirmación
 - Feedback háptico en cada acción
 
