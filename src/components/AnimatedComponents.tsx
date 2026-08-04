@@ -61,20 +61,28 @@ interface FadeInViewProps {
 // on certain devices/chipsets if the babel plugin didn't transform correctly).
 export function FadeInView({ children, delay = 0, duration = 300 }: FadeInViewProps) {
   const opacity = useRef(new RNAnimated.Value(0)).current;
+  const translateY = useRef(new RNAnimated.Value(15)).current; // Start slightly below
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      RNAnimated.timing(opacity, {
-        toValue: 1,
-        duration,
-        useNativeDriver: true,
-      }).start();
+      RNAnimated.parallel([
+        RNAnimated.timing(opacity, {
+          toValue: 1,
+          duration,
+          useNativeDriver: true,
+        }),
+        RNAnimated.timing(translateY, {
+          toValue: 0,
+          duration: duration + 100, // Slightly longer for the slide
+          useNativeDriver: true,
+        }),
+      ]).start();
     }, delay);
     return () => clearTimeout(timeout);
-  }, [opacity, delay, duration]);
+  }, [opacity, translateY, delay, duration]);
 
   return (
-    <RNAnimated.View style={{ opacity }}>
+    <RNAnimated.View style={{ opacity, transform: [{ translateY }] }}>
       {children}
     </RNAnimated.View>
   );

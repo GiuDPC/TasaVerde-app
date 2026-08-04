@@ -105,7 +105,7 @@ export function AppLogo({ size = 50 }: { size?: number }) {
   return (
     <View style={[styles.logoContainer, { width: size, height: size, borderRadius: size * 0.28 }]}>
       <Image
-        source={require('../../assets/icon.png')}
+        source={require('../../assets/TasaVerde-Logo.png')}
         style={{ width: size, height: size, borderRadius: size * 0.28 }}
         resizeMode="cover"
       />

@@ -10,14 +10,16 @@ import { ActiveRateBanner } from '../components/ActiveRateBanner';
 import { ConversorPanel } from '../components/calculators/ConversorPanel';
 import { ChangeCalculatorPanel } from '../components/calculators/ChangeCalculatorPanel';
 import { MixedPaymentPanel } from '../components/calculators/MixedPaymentPanel';
+import { MathCalculatorPanel } from '../components/calculators/MathCalculatorPanel';
 import { FadeInView } from '../components/AnimatedComponents';
 import { spacing, radii, Palette } from '../theme';
 import { useThemeColors } from '../state/ThemeContext';
 
-type Segment = 'conversor' | 'vuelto' | 'mixto';
+type Segment = 'conversor' | 'vuelto' | 'mixto' | 'matematica';
 
 const SEGMENTS: { key: Segment; label: string; icon: 'calculator' | 'dollar' }[] = [
   { key: 'conversor', label: 'Conversor', icon: 'calculator' },
+  { key: 'matematica', label: 'Matemática', icon: 'calculator' },
   { key: 'vuelto', label: 'Vuelto', icon: 'dollar' },
   { key: 'mixto', label: 'Pago Mixto', icon: 'dollar' },
 ];
@@ -84,6 +86,11 @@ export function CalculatorScreen() {
       {segment === 'mixto' && (
         <FadeInView key="mixto" delay={40}>
           <MixedPaymentPanel />
+        </FadeInView>
+      )}
+      {segment === 'matematica' && (
+        <FadeInView key="matematica" delay={40}>
+          <MathCalculatorPanel />
         </FadeInView>
       )}
     </ScrollView>

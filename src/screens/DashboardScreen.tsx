@@ -6,6 +6,7 @@ import { useRates } from '../hooks/useRates';
 import { FadeInView, PulsingBadge } from '../components/AnimatedComponents';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { Icon } from '../components/Icon';
+import { TasaVerdeLogo } from '../components/TasaVerdeLogo';
 import { DashboardSkeleton } from '../components/SkeletonLoader';
 import { useThemeColors, useTheme } from '../state/ThemeContext';
 import { Palette, spacing, radii } from '../theme';
@@ -84,7 +85,7 @@ export function DashboardScreen() {
       <FadeInView delay={0}>
         <View style={s.header}>
           <View style={s.logoContainer}>
-            <Icon name="graphic" size={40} color={c.accent} />
+            <TasaVerdeLogo width={40} height={40} color={c.accent} />
             <View style={s.logoText}>
               <Text style={s.logo}>TasaVerde</Text>
               <Text style={s.logoSubtitle}>Tasas en tiempo real</Text>
@@ -183,7 +184,7 @@ export function DashboardScreen() {
       <FadeInView delay={260}>
         <View style={s.comparisonCard}>
           <View style={s.comparisonHeader}>
-            <Icon name="graphic" size={20} color={c.accent} />
+            <TasaVerdeLogo width={20} height={20} color={c.accent} />
             <Text style={s.comparisonTitle}>Comparación de Tasas</Text>
           </View>
           <View style={s.comparisonRow}>

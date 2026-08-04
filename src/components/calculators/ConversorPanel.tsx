@@ -33,9 +33,10 @@ export function ConversorPanel() {
   const resultText =
     mode === 'usdToBs' ? `Bs. ${formatBsAmount(result)}` : `$ ${result.toFixed(2)}`;
 
-  const toggleMode = () => {
+  const handleModeChange = (newMode: Mode) => {
+    if (mode === newMode) return;
     hapticImpact(Haptics.ImpactFeedbackStyle.Medium);
-    setMode(mode === 'usdToBs' ? 'bsToUsd' : 'usdToBs');
+    setMode(newMode);
     setDisplay('');
     setNumeric(0);
   };
@@ -56,15 +57,25 @@ export function ConversorPanel() {
 
   return (
     <View>
-      <TouchableOpacity style={s.modeToggle} onPress={toggleMode} accessibilityRole="button">
-        <View style={[s.modeOption, mode === 'usdToBs' && s.modeActive]}>
+      <View style={s.modeToggle} accessibilityRole="tablist">
+        <TouchableOpacity 
+          style={[s.modeOption, mode === 'usdToBs' && s.modeActive]} 
+          onPress={() => handleModeChange('usdToBs')} 
+          accessibilityRole="tab"
+          activeOpacity={0.8}
+        >
           <Icon name="dollar" size={18} color={mode === 'usdToBs' ? '#fff' : c.textMuted} />
           <Text style={[s.modeText, mode === 'usdToBs' && s.modeTextActive]}>USD</Text>
-        </View>
-        <View style={[s.modeOption, mode === 'bsToUsd' && s.modeActive]}>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[s.modeOption, mode === 'bsToUsd' && s.modeActive]} 
+          onPress={() => handleModeChange('bsToUsd')} 
+          accessibilityRole="tab"
+          activeOpacity={0.8}
+        >
           <Text style={[s.modeText, mode === 'bsToUsd' && s.modeTextActive]}>Bs</Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
 
       <Text style={s.inputLabel}>
         {mode === 'usdToBs' ? 'MONTO EN DÓLARES' : 'MONTO EN BOLÍVARES'}
@@ -134,8 +145,8 @@ function createStyles(c: Palette) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: c.card,
-      borderRadius: 30,
-      padding: 5,
+      borderRadius: 999, // Utilizar 999 para pastilla perfecta
+      padding: 4,
       marginBottom: 20,
       borderWidth: 1,
       borderColor: c.border,
@@ -146,8 +157,8 @@ function createStyles(c: Palette) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      paddingVertical: 12,
-      borderRadius: 30,
+      paddingVertical: 10,
+      borderRadius: 999, // Pastilla perfecta
     },
     modeActive: { backgroundColor: c.accent },
     modeText: { fontSize: 15, color: c.textMuted, fontWeight: 'bold' },
