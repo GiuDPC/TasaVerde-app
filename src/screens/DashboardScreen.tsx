@@ -46,8 +46,6 @@ export function DashboardScreen() {
 
   if (isLoading) return <DashboardSkeleton />;
 
-  // Si hay datos en caché seguimos mostrándolos aunque el refetch falle
-  // (marcados como offline); solo falla la pantalla si no hay NADA que mostrar.
   if (!rates) {
     return (
       <View style={s.errorContainer}>

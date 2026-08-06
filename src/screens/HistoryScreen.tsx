@@ -51,7 +51,7 @@ export function HistoryScreen() {
 
   const trend = data?.trend;
 
-  // Tarjetas de día: más reciente primero.
+  // Tarjetas de día: más reciente
   const daySnapshots = useMemo(
     () =>
       data

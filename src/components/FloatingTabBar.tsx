@@ -1,6 +1,3 @@
-// Floating navbar — Telegram-style pill, elevated, with sliding animated
-// indicator (Reanimated). Hides with keyboard.
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -22,7 +19,7 @@ const ICON_MAP: Record<string, IconName> = {
 };
 
 const H_PADDING = 8;
-const INDICATOR_H_MARGIN = 8; // Space between indicator edge and tab slot edge
+const INDICATOR_H_MARGIN = 8;
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -52,10 +49,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     };
   }, [hideY]);
 
-  // The container has paddingHorizontal = H_PADDING. The usable inner width
-  // (where tabs live) is barWidth - 2 * H_PADDING. Each tab slot is
-  // innerWidth / routes.length. The indicator width = slot - 2 * margin.
-  // The indicator translateX = H_PADDING + slot * index + margin.
+  
   const totalRoutes = state.routes.length;
   const innerWidth = barWidth > 0 ? barWidth - 2 * H_PADDING : winWidth - 32 - 2 * H_PADDING;
   const slotWidth = innerWidth / totalRoutes;
@@ -123,7 +117,7 @@ function createStyles(c: Palette) {
       position: 'absolute',
       top: 6,
       bottom: 6,
-      left: 0, // translateX handles positioning
+      left: 0,
       borderRadius: 22,
       backgroundColor: c.accentSoft,
       borderWidth: 1,

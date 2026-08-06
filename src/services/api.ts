@@ -1,13 +1,9 @@
 import axios from 'axios';
 
-// URL de produccion (Render). ponytail: sigue siendo un solo punto de red para el dato
-// "en vivo", pero offline-first ya no lo hace crítico (la app opera con caché).
-// Upgrade path: llamar directo a la API pública de Binance P2P desde la app.
 const API_URL = 'https://kambio-server.onrender.com/api';
 
 const http = axios.create({
   baseURL: API_URL,
-  // ponytail: 12s mata el skeleton infinito cuando Render "duerme" (free tier).
   timeout: 12000,
 });
 

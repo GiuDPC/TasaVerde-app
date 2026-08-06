@@ -1,7 +1,3 @@
-// Premium animated splash: TasaVerde wordmark with animated chart bars,
-// green glow pulse, spring entrance, and smooth fade out. 60fps native.
-// Defensive: wrapped in try/catch so a broken animation never blocks the app.
-
 import React, { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View, Text, Animated, Easing, Dimensions } from 'react-native';
 import { Palette } from '../theme';
@@ -25,7 +21,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
   const glowScale = useRef(new Animated.Value(0.3)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
 
-  // Chart bars — 4 bars that animate up sequentially
   const bar1 = useRef(new Animated.Value(0)).current;
   const bar2 = useRef(new Animated.Value(0)).current;
   const bar3 = useRef(new Animated.Value(0)).current;
@@ -33,14 +28,12 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
   const barsOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Safety timeout: if animation somehow gets stuck, force finish after 5s
     const safetyTimer = setTimeout(() => {
       onFinish();
     }, 5000);
 
     try {
       Animated.sequence([
-        // 1. Green glow expands first
         Animated.parallel([
           Animated.timing(glowOpacity, { toValue: 0.25, duration: 300, useNativeDriver: true }),
           Animated.spring(glowScale, {
@@ -50,7 +43,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
             useNativeDriver: true,
           }),
         ]),
-        // 2. Chart bars rise with stagger
         Animated.parallel([
           Animated.timing(barsOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
           Animated.stagger(80, [
@@ -60,7 +52,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
             Animated.spring(bar4, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
           ]),
         ]),
-        // 3. Wordmark appears with spring
         Animated.parallel([
           Animated.timing(wordOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
           Animated.spring(wordScale, {
@@ -70,7 +61,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
             useNativeDriver: true,
           }),
         ]),
-        // 4. Underline grows
         Animated.parallel([
           Animated.timing(lineOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
           Animated.timing(lineWidth, {
@@ -80,16 +70,13 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
             useNativeDriver: false,
           }),
         ]),
-        // 5. Hold for a beat
         Animated.delay(900),
-        // 6. Fade out everything
         Animated.timing(containerOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
       ]).start(() => {
         clearTimeout(safetyTimer);
         onFinish();
       });
     } catch {
-      // Animation setup failed — skip splash entirely
       clearTimeout(safetyTimer);
       onFinish();
     }
@@ -105,7 +92,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
 
   return (
     <Animated.View style={[s.container, { opacity: containerOpacity }]}>
-      {/* Green glow behind everything */}
       <Animated.View
         style={[
           s.glow,
@@ -116,7 +102,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         ]}
       />
 
-      {/* Animated chart bars */}
       <Animated.View style={[s.barsContainer, { opacity: barsOpacity }]}>
         {bars.map((barAnim, i) => (
           <Animated.View
@@ -133,7 +118,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         ))}
       </Animated.View>
 
-      {/* Wordmark */}
       <Animated.View style={{ opacity: wordOpacity, transform: [{ scale: wordScale }] }}>
         <View style={s.wordRow}>
           <Text style={s.wordTasa}>Tasa</Text>
@@ -144,7 +128,6 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         />
       </Animated.View>
 
-      {/* Subtitle */}
       <Animated.View style={{ opacity: wordOpacity, marginTop: 12 }}>
         <Text style={s.subtitle}>Tasas en tiempo real</Text>
       </Animated.View>

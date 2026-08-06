@@ -1,6 +1,3 @@
-// Circular reveal transition — Telegram-style theme switch animation.
-// Uses plain RN Animated (not Reanimated) for maximum device compatibility.
-
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, useWindowDimensions } from 'react-native';
 import { buildPalette } from '../theme';

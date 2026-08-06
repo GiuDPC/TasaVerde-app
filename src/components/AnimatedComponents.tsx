@@ -1,7 +1,3 @@
-// Animated UI components — PulsingBadge and FadeInView.
-// Uses plain RN Animated for FadeInView (safe on all devices).
-// PulsingBadge still uses Reanimated (it's non-critical, only for badges).
-
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
 import Animated, {
@@ -35,7 +31,6 @@ export function PulsingBadge({ text, color = '#10B981' }: BadgeProps) {
         -1
       );
     } catch {
-      // Non-critical — badge just won't pulse
     }
   }, [scale, opacity]);
 
@@ -57,8 +52,7 @@ interface FadeInViewProps {
   duration?: number;
 }
 
-// Pure RN Animated fade-in — no Reanimated layout animations (which can crash
-// on certain devices/chipsets if the babel plugin didn't transform correctly).
+
 export function FadeInView({ children, delay = 0, duration = 300 }: FadeInViewProps) {
   const opacity = useRef(new RNAnimated.Value(0)).current;
   const translateY = useRef(new RNAnimated.Value(15)).current; // Start slightly below
@@ -73,7 +67,7 @@ export function FadeInView({ children, delay = 0, duration = 300 }: FadeInViewPr
         }),
         RNAnimated.timing(translateY, {
           toValue: 0,
-          duration: duration + 100, // Slightly longer for the slide
+          duration: duration + 100,
           useNativeDriver: true,
         }),
       ]).start();

@@ -3,10 +3,7 @@ import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { Palette } from '../theme';
 import { useThemeColors } from '../state/ThemeContext';
 
-/**
- * Componente SkeletonLoader - Muestra un placeholder animado mientras carga el contenido
- * Se usa en lugar de ActivityIndicator para una experiencia más premium
- */
+
 
 interface SkeletonProps {
   width?: number | string;
@@ -15,7 +12,6 @@ interface SkeletonProps {
   style?: any;
 }
 
-// Skeleton individual con animación de pulso
 export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style }: SkeletonProps) {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
@@ -58,7 +54,6 @@ export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style 
   );
 }
 
-// Skeleton para tarjeta de tasa principal (BCV Dólar)
 export function MainCardSkeleton() {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
@@ -79,7 +74,6 @@ export function MainCardSkeleton() {
   );
 }
 
-// Skeleton para tarjetas secundarias (Euro, Binance)
 export function SecondaryCardSkeleton() {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
@@ -93,7 +87,6 @@ export function SecondaryCardSkeleton() {
   );
 }
 
-// Skeleton para el banner de mejor opción
 export function BannerSkeleton() {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
@@ -108,7 +101,6 @@ export function BannerSkeleton() {
   );
 }
 
-// Pantalla completa de loading con skeletons
 export function DashboardSkeleton() {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);

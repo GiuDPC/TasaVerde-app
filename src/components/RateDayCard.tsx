@@ -1,6 +1,3 @@
-// Tarjeta de un día del historial de tasas. Al tocarla (desde la pantalla de
-// Historial) se abre el modal para aplicar esa tasa en los cálculos.
-
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { radii, Palette } from '../theme';

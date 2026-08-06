@@ -1,11 +1,3 @@
-// Currency input with live mask and premium animations.
-// Uses plain RN Animated for focus effects (no Reanimated layout animations
-// which crash on some devices).
-// - Bs: Venezuelan banking format, right-to-left (digits = cents):
-//   '1' → '0,01', '3500' → '35,00', dot thousands, comma decimal.
-// - USD: simple decimal with max 2 decimals.
-// - RATE: free number for rates (800 → 800, not 8,00), comma/dot decimal.
-
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 import { radii, Palette } from '../theme';
@@ -17,7 +9,7 @@ type Currency = 'BS' | 'USD' | 'RATE';
 
 interface CurrencyInputProps {
   currency: Currency;
-  value: string; // controlled display from parent
+  value: string;
   onChange: (display: string, numeric: number) => void;
   placeholder?: string;
   autoFocus?: boolean;

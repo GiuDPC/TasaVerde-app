@@ -1,7 +1,3 @@
-// Toast global premium (cross-platform): un pill flotante con icono y texto
-// que aparece con spring y se auto-oculta. Se dispara con showToast() desde
-// cualquier parte de la app sin necesidad de contexto.
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

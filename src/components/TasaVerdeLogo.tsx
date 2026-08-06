@@ -8,8 +8,7 @@ interface Props {
 }
 
 export function TasaVerdeLogo({ width = 40, height = 40, color = '#10B981' }: Props) {
-  // SVG original extraído del archivo, envuelto directamente en React Native SVG.
-  // Agregamos stroke para darle grosor y que no se vea como una línea delgada y fea.
+
   return (
     <Svg width={width} height={height} viewBox="0 0 445 475">
       <G 

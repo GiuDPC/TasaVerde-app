@@ -1,8 +1,3 @@
-// Settings bottom sheet — accessible from the "•••" button on the Dashboard.
-// Contains: dark/light theme toggle (with circular transition), accent color
-// from the fixed premium palette, restore defaults, and about.
-// Uses plain RN Animated (no Reanimated) for maximum device compatibility.
-
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,

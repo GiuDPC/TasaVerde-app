@@ -1,7 +1,3 @@
-// Global error boundary: catches render crashes and shows a friendly recovery
-// screen. Uses ONLY hardcoded colors and no external components (Icon, themes)
-// to guarantee it never crashes itself.
-
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -28,8 +24,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // Fully self-contained — no hooks, no context, no Icon component.
-      // Hardcoded dark theme colors guarantee this screen always renders.
       return (
         <View style={styles.container}>
           <Text style={styles.emoji}>⚠️</Text>

@@ -6,6 +6,14 @@ App de tasas de cambio en Venezuela: compara BCV vs Binance P2P y te dice la mej
 ![Expo](https://img.shields.io/badge/Expo-000020?logo=expo&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 
+<p align="center">
+  <img src="docs/screenshots/Dashboard.jpg" width="18%" />
+  <img src="docs/screenshots/DashboardMenu.jpg" width="18%" />
+  <img src="docs/screenshots/Calculator.jpg" width="18%" />
+  <img src="docs/screenshots/History.jpg" width="18%" />
+  <img src="docs/screenshots/History2.jpg" width="18%" />
+</p>
+
 ---
 
 ## Features

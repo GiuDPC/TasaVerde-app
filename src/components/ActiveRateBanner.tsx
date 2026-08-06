@@ -1,7 +1,3 @@
-// Selector de la "tasa activa": muestra con qué tasa se calcula y permite
-// cambiar entre la tasa en vivo (BCV / Euro / Binance), una histórica o una
-// personalizada. Se reutiliza en las 3 calculadoras.
-
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Haptics from 'expo-haptics';

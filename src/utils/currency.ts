@@ -1,4 +1,4 @@
-// Utilidades de moneda VES/USD — unificadas aquí (antes había dos archivos).
+// Utilidades de moneda VES/USD
 
 export function parseCurrencyInput(text: string): number {
   if (!text || text.trim() === '') return 0;

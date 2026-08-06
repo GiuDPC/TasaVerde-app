@@ -46,3 +46,8 @@ android/local.properties
 # agent tooling (gentle-ai / local skill caches)
 .atl/
 .agente
+
+# Testing
+coverage/
+__snapshots__/
+.jest/

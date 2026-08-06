@@ -1,5 +1,5 @@
 // Lógica pura de snapshots de tasas (sin AsyncStorage para poder testearla en Node).
-// El historial vive LOCAL en el teléfono y se auto-poda: solo se conservan
+// El historial vive LOCAL en el teléfono
 // los últimos HISTORY_RETENTION_DAYS días (incluido hoy).
 
 import type { HistoryEntry, HistoryResponse, Trend } from '../services/api';

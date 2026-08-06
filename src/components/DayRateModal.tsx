@@ -1,7 +1,3 @@
-// Modal bottom-sheet for applying a day's rate from history.
-// Uses RN's built-in Modal animation (slide) instead of Reanimated layout
-// animations which crash on some chipsets.
-
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
@@ -30,7 +26,6 @@ export function DayRateModal({ snapshot, onClose, onApply }: DayRateModalProps) 
   const s = useMemo(() => createStyles(c), [c]);
   const insets = useSafeAreaInsets();
 
-  // Manual slide-up animation using plain RN Animated
   const slideAnim = useRef(new Animated.Value(400)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 

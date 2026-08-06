@@ -14,8 +14,6 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-// Historial 100% local. Si hay pocos datos (primer uso), intenta sembrar desde
-// el server con un tope de 4s: si el server está dormido, no se bloquea la UI.
 async function loadHistory(days: number): Promise<HistoryResponse> {
   const local = await getSnapshots();
   const response = buildHistoryResponse(local, days);
@@ -29,7 +27,6 @@ async function loadHistory(days: number): Promise<HistoryResponse> {
         return buildHistoryResponse(merged, days);
       }
     } catch {
-      // offline o server dormido: se sigue con lo local (hoy + acumulación diaria)
     }
   }
 

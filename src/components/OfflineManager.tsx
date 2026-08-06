@@ -1,7 +1,3 @@
-// Gestor de conectividad: muestra un banner persistente mientras no hay
-// internet y, al reconectar, re-fetcha tasas/historial y avisa con un toast.
-// Las tasas se siguen usando desde la caché local (offline-first).
-
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
