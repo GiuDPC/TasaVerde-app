@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "check": "node scripts/selfcheck.mts",
+    "check": "npx tsx scripts/selfcheck.mts",
     "test": "jest"
   },
   "dependencies": {
