@@ -45,9 +45,8 @@ android/local.properties
 
 # agent tooling (gentle-ai / local skill caches)
 .atl/
-.agente
-.agent/worflows/
-.agent
+.agente/
+.agent/
 # Testing
 coverage/
 __snapshots__/

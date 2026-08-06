@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Animated, Easing, Text } from 'react-native';
 import { Palette } from '../theme';
 import { useThemeColors } from '../state/ThemeContext';
 
@@ -104,8 +104,29 @@ export function BannerSkeleton() {
 export function DashboardSkeleton() {
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
+  
+  const [showSyncMsg, setShowSyncMsg] = React.useState(false);
+  const syncOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setShowSyncMsg(true);
+      Animated.timing(syncOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [syncOpacity]);
+
   return (
     <View style={s.container}>
+      {showSyncMsg && (
+        <Animated.View style={[s.syncBanner, { opacity: syncOpacity }]}>
+          <Text style={s.syncText}>Conectando con el servidor...</Text>
+        </Animated.View>
+      )}
       {/* Header Skeleton */}
       <View style={s.header}>
         <View style={s.logoContainer}>
@@ -224,6 +245,26 @@ function createStyles(c: Palette) {
     comparisonHeader: {
       flexDirection: 'row',
       alignItems: 'center',
+    },
+    syncBanner: {
+      position: 'absolute',
+      top: 60,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      zIndex: 50,
+    },
+    syncText: {
+      backgroundColor: c.accentSoft,
+      color: c.accent,
+      borderWidth: 1,
+      borderColor: c.accentBorder,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      fontSize: 12,
+      fontWeight: 'bold',
+      overflow: 'hidden',
     },
   });
 }

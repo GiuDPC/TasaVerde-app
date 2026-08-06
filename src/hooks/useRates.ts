@@ -22,6 +22,7 @@ export function useRates() {
     queryKey: ['rates'],
     queryFn: fetchRatesWithFallback,
     staleTime: 30 * 1000,
-    retry: 0,
+    retry: 1,
+    retryDelay: 3000,
   });
 }

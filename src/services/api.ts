@@ -4,7 +4,7 @@ const API_URL = 'https://kambio-server.onrender.com/api';
 
 const http = axios.create({
   baseURL: API_URL,
-  timeout: 12000,
+  timeout: 60000,
 });
 
 export interface Rates {

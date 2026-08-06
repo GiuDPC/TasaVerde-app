@@ -1,12 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated as RNAnimated } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withSequence,
-} from 'react-native-reanimated';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 
 interface BadgeProps {
   text: string;
@@ -14,33 +7,28 @@ interface BadgeProps {
 }
 
 export function PulsingBadge({ text, color = '#10B981' }: BadgeProps) {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    try {
-      scale.value = withRepeat(
-        withSequence(
-          withTiming(1.08, { duration: 600 }),
-          withTiming(1, { duration: 600 })
-        ),
-        -1
-      );
-      opacity.value = withRepeat(
-        withSequence(withTiming(0.8, { duration: 600 }), withTiming(1, { duration: 600 })),
-        -1
-      );
-    } catch {
-    }
+    const anim = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.08, duration: 600, useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 600, useNativeDriver: true })
+        ]),
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 0.8, duration: 600, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true })
+        ])
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
   }, [scale, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   return (
-    <Animated.View style={[styles.badge, { backgroundColor: color }, animatedStyle]}>
+    <Animated.View style={[styles.badge, { backgroundColor: color, transform: [{ scale }], opacity }]}>
       <Text style={styles.badgeText}>{text}</Text>
     </Animated.View>
   );
@@ -52,20 +40,19 @@ interface FadeInViewProps {
   duration?: number;
 }
 
-
 export function FadeInView({ children, delay = 0, duration = 300 }: FadeInViewProps) {
-  const opacity = useRef(new RNAnimated.Value(0)).current;
-  const translateY = useRef(new RNAnimated.Value(15)).current; // Start slightly below
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(15)).current; // Start slightly below
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      RNAnimated.parallel([
-        RNAnimated.timing(opacity, {
+      Animated.parallel([
+        Animated.timing(opacity, {
           toValue: 1,
           duration,
           useNativeDriver: true,
         }),
-        RNAnimated.timing(translateY, {
+        Animated.timing(translateY, {
           toValue: 0,
           duration: duration + 100,
           useNativeDriver: true,
@@ -76,9 +63,9 @@ export function FadeInView({ children, delay = 0, duration = 300 }: FadeInViewPr
   }, [opacity, translateY, delay, duration]);
 
   return (
-    <RNAnimated.View style={{ opacity, transform: [{ translateY }] }}>
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
       {children}
-    </RNAnimated.View>
+    </Animated.View>
   );
 }
 

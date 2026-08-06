@@ -56,7 +56,6 @@ App de tasas de cambio en Venezuela: compara BCV vs Binance P2P y te dice la mej
 | TanStack Query             | Data fetching y caché                |
 | AsyncStorage               | Persistencia offline (caché + historial) |
 | @react-native-community/netinfo | Detección de conexión            |
-| react-native-reanimated    | Animaciones                          |
 | expo-haptics / expo-clipboard | Feedback háptico y portapapeles   |
 
 Backend: **kambio-server** (Express, scraping BCV + API Binance P2P) en Render.

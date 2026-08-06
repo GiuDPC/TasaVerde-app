@@ -1,11 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Keyboard, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { Keyboard, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, Animated } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radii, shadows, Palette } from '../theme';
@@ -27,50 +21,60 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const c = useThemeColors();
   const s = useMemo(() => createStyles(c), [c]);
   const [barWidth, setBarWidth] = useState(0);
-  const slide = useSharedValue(state.index);
-  const hideY = useSharedValue(0);
+
+  const slide = useRef(new Animated.Value(state.index)).current;
+  const hideY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    slide.value = withSpring(state.index, { damping: 18, stiffness: 200 });
+    Animated.spring(slide, {
+      toValue: state.index,
+      damping: 18,
+      stiffness: 200,
+      useNativeDriver: true,
+    }).start();
   }, [state.index, slide]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    
     const show = Keyboard.addListener(showEvent, () => {
-      hideY.value = withTiming(200, { duration: 180 });
+      Animated.timing(hideY, { toValue: 200, duration: 180, useNativeDriver: true }).start();
     });
     const hide = Keyboard.addListener(hideEvent, () => {
-      hideY.value = withTiming(0, { duration: 180 });
+      Animated.timing(hideY, { toValue: 0, duration: 180, useNativeDriver: true }).start();
     });
+    
     return () => {
       show.remove();
       hide.remove();
     };
   }, [hideY]);
 
-  
   const totalRoutes = state.routes.length;
   const innerWidth = barWidth > 0 ? barWidth - 2 * H_PADDING : winWidth - 32 - 2 * H_PADDING;
   const slotWidth = innerWidth / totalRoutes;
   const indicatorWidth = slotWidth - 2 * INDICATOR_H_MARGIN;
 
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: H_PADDING + slide.value * slotWidth + INDICATOR_H_MARGIN }],
-  }));
+  // We need to provide a default output range to prevent errors when barWidth is 0 initially.
+  // But interpolate handles this dynamically.
+  const indicatorTranslateX = slide.interpolate({
+    inputRange: state.routes.map((_, i) => i),
+    outputRange: state.routes.map((_, i) => H_PADDING + i * (slotWidth || 1) + INDICATOR_H_MARGIN),
+  });
 
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: hideY.value }],
-    opacity: 1 - hideY.value / 200,
-  }));
+  const containerOpacity = hideY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [1, 0],
+  });
 
   return (
     <Animated.View
-      style={[s.container, { bottom: insets.bottom + 14 }, containerStyle]}
+      style={[s.container, { bottom: insets.bottom + 14 }, { transform: [{ translateY: hideY }], opacity: containerOpacity }]}
       onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
-        style={[s.indicator, { width: indicatorWidth }, indicatorStyle]}
+        style={[s.indicator, { width: indicatorWidth, transform: [{ translateX: indicatorTranslateX }] }]}
       />
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
